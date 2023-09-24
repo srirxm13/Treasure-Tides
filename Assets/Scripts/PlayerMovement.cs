@@ -49,6 +49,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] GameObject scopeUI;
     [SerializeField] bool scoperEnabled;
 
+    [Header("Player Health")]
+    public int currentHealth;
+    [SerializeField] int maxHealth = 100;
+    public int potions;
+    [SerializeField] Animator potionAnimator;
+
+    [Header("Rum")]
+    public bool rumEffect;
+    [SerializeField] Animator rumAnimator;
+
     private void Start()
     {
         inventory = gameObject.GetComponent<Inventory>();
@@ -57,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
         canShoot = true;
         gunCurrentAmmo = gunMaxAmmo;
         coolDownTimeLeft = coolDownTime;
+        currentHealth = maxHealth;
     }
 
     private void Update()
@@ -99,7 +110,6 @@ public class PlayerMovement : MonoBehaviour
                 scoperEnabled = false;
             }
         }
-
         if (scoperEnabled)
         {
             scopeUI.SetActive(true);
@@ -109,6 +119,34 @@ public class PlayerMovement : MonoBehaviour
         {
             scopeUI.SetActive(false);
             cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, normalFov, 10 * Time.deltaTime);
+        }
+
+        //Health
+        if (Input.GetMouseButtonDown(0) && inventory.currentItem == 4 && !potionAnimator.GetBool("heal"))
+        {
+            if (potions > 0)
+            {
+                potions--;
+                potionAnimator.SetBool("heal", true);
+                StartCoroutine(Heal());
+                if (currentHealth < maxHealth)
+                {
+                    currentHealth += 40;
+                }
+
+                if (currentHealth > maxHealth)
+                {
+                    currentHealth = maxHealth;
+                }
+            }
+        }
+
+        //Rum
+        if(Input.GetMouseButtonDown(0) && inventory.currentItem == 5 && !rumEffect)
+        {
+            rumEffect = true;
+            rumAnimator.SetBool("drink", true);
+            StartCoroutine(Rum());
         }
     }
 
@@ -197,5 +235,19 @@ public class PlayerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);        
         gunAnimator.SetBool("shoot", false);
+    }
+
+    IEnumerator Heal()
+    {
+        yield return new WaitForSeconds(1f);
+        potionAnimator.SetBool("heal", false);
+    }
+
+    IEnumerator Rum()
+    {
+        yield return new WaitForSeconds(1f);
+        rumAnimator.SetBool("drink", false);
+        yield return new WaitForSeconds(19f);
+        rumEffect = false;
     }
 }

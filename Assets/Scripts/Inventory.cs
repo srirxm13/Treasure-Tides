@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Inventory : MonoBehaviour
 {
-    public int currentItem; //1 Sword 2 Compass 3 SpyGlass 4 Food 5 Rum 6 Bomb 7 lantern 8 Instrument
+    public int currentItem; //1 Sword 2 Compass 3 SpyGlass 4 Food 5 Rum 6 lantern 7 Instrument
     [SerializeField] GameObject[] Equipments;
+    [SerializeField] Image[] InventoryIcons;
+    [SerializeField] RectTransform bgIcon;
     // Start is called before the first frame update
     void Start()
     {
@@ -71,6 +74,8 @@ public class Inventory : MonoBehaviour
             Equipment();
         }
         #endregion
+
+        bgIcon.position = InventoryIcons[currentItem].rectTransform.position;
     }
 
     void Equipment()

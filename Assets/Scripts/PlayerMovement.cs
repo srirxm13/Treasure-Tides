@@ -59,6 +59,9 @@ public class PlayerMovement : MonoBehaviour
     public bool rumEffect;
     [SerializeField] Animator rumAnimator;
 
+    [Header("Quest System")]
+    [SerializeField] private Animator questAnimator;
+
     private void Start()
     {
         inventory = gameObject.GetComponent<Inventory>();
@@ -101,11 +104,11 @@ public class PlayerMovement : MonoBehaviour
         //Spy Glass
         if (inventory.currentItem == 3)
         {
-            if (Input.GetMouseButton(1))
+            if (Input.GetMouseButton(0))
             {
                 scoperEnabled = true;
             }
-            else if (Input.GetMouseButtonUp(1))
+            else if (Input.GetMouseButtonUp(0))
             {
                 scoperEnabled = false;
             }
@@ -147,6 +150,27 @@ public class PlayerMovement : MonoBehaviour
             rumEffect = true;
             rumAnimator.SetBool("drink", true);
             StartCoroutine(Rum());
+        }
+
+        //Quest
+        if (Input.GetMouseButton(0) && inventory.currentItem == 7)
+        {
+            questAnimator.SetBool("look", true);
+        }
+
+        if (Input.GetMouseButtonUp(0) && inventory.currentItem == 7)
+        {
+            questAnimator.SetBool("look", false);
+        }
+
+        if (Input.GetMouseButton(0) && inventory.currentItem == 8)
+        {
+            questAnimator.SetBool("look", true);
+        }
+
+        if (Input.GetMouseButtonUp(0) && inventory.currentItem == 8)
+        {
+            questAnimator.SetBool("look", false);
         }
     }
 

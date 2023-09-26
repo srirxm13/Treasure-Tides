@@ -129,11 +129,11 @@ public class PlayerMovement : MonoBehaviour
         {
             if (potions > 0)
             {
-                potions--;
-                potionAnimator.SetBool("heal", true);
-                StartCoroutine(Heal());
+                
                 if (currentHealth < maxHealth)
-                {
+                {   potions--;
+                    potionAnimator.SetBool("heal", true);
+                    StartCoroutine(Heal());
                     currentHealth += 40;
                 }
 
@@ -187,12 +187,12 @@ public class PlayerMovement : MonoBehaviour
                 swordParticle.Play();
             }
         }
-
         if (attackTime.canAttack)
         {
             if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit hit, swordAttackDistance, attackLayer))
             {
-                Destroy(hit.transform.gameObject);  //Add Damage Later
+                hit.transform.gameObject.GetComponent<EnemyAI>().Damage(1);
+                attackTime.canAttack = false;
             }
         }
 
@@ -273,5 +273,18 @@ public class PlayerMovement : MonoBehaviour
         rumAnimator.SetBool("drink", false);
         yield return new WaitForSeconds(19f);
         rumEffect = false;
+    }
+
+    public void Damage(int damage)
+    {
+        if (currentHealth > 0)
+        {
+            currentHealth -= damage;
+        }
+
+        if(currentHealth <= 0)
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        }
     }
 }

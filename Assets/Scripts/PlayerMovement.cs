@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -61,9 +64,24 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Quest System")]
     [SerializeField] private Animator questAnimator;
+    [SerializeField] private Animator questAnimator2;
+    [SerializeField] GameObject questUpdateText;
+    public int questSkelly = 0;
+    [SerializeField] bool quest2Range;
+    [SerializeField] private int currentQuest = 0;
+    [SerializeField] private GameObject[] questProgress;
+    [SerializeField] int coins;
+    [SerializeField] LayerMask IsleLayer;
+    [SerializeField] bool quest5Range;
 
+    [Header("UI")]
+    [SerializeField] TMP_Text ammoCount;
+    [SerializeField] TMP_Text potionsCount;
+    [SerializeField] Slider HealthSlider;
+    [SerializeField] GameObject PauseScreen;
     private void Start()
     {
+        UpdateQuest();
         inventory = gameObject.GetComponent<Inventory>();
         moveSpeed = normalSpeed;
         controller = gameObject.GetComponent<CharacterController>();
@@ -71,6 +89,9 @@ public class PlayerMovement : MonoBehaviour
         gunCurrentAmmo = gunMaxAmmo;
         coolDownTimeLeft = coolDownTime;
         currentHealth = maxHealth;
+        questUpdateText.SetActive(false);
+        PauseScreen.SetActive(false);
+        Time.timeScale = 1f;
     }
 
     private void Update()
@@ -79,7 +100,54 @@ public class PlayerMovement : MonoBehaviour
         Jump();
         Gravity();
         PlayerAttack();
-        InventoryItems();      
+        InventoryItems();
+        Quest();
+
+        ammoCount.text = gunCurrentAmmo.ToString();
+        potionsCount.text = potions.ToString();
+        HealthSlider.value = currentHealth;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            PauseScreen.SetActive(true);
+            Time.timeScale = 0f;
+            Cursor.lockState = CursorLockMode.Confined;
+        }
+    }
+
+    void UpdateQuest()
+    {
+        currentQuest++;
+        questProgress[currentQuest].SetActive(true);
+        StartCoroutine(questText());
+    }
+
+    void Quest()
+    {
+        if(currentQuest == 1 && questSkelly >= 3)
+        {
+            UpdateQuest();
+        }
+
+        if (currentQuest == 2 && inventory.currentItem == 6 && quest2Range)
+        {
+            coins += 1000;
+            UpdateQuest();
+            UpdateQuest();
+        }
+
+        if(currentQuest == 4 && scoperEnabled)
+        {
+            if(Physics.Raycast(cam.transform.position, cam.transform.forward, 500f, IsleLayer))
+            {
+                UpdateQuest();
+            }
+        }
+
+        if(currentQuest == 5 && rumEffect && quest5Range)
+        {
+            UpdateQuest();
+        }
     }
 
     void InventoryItems()
@@ -98,7 +166,7 @@ public class PlayerMovement : MonoBehaviour
             float needleRotation = Mathf.Atan2(relativeTarget.x, relativeTarget.z) * Mathf.Rad2Deg;
 
             // apply needle rotation
-            needle.transform.localRotation = Quaternion.Euler(-needleRotation, 0, 0);
+            needle.transform.localRotation = Quaternion.Euler(0, needleRotation,0);
         }
 
         //Spy Glass
@@ -165,12 +233,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetMouseButton(0) && inventory.currentItem == 8)
         {
-            questAnimator.SetBool("look", true);
+            questAnimator2.SetBool("look", true);
         }
 
         if (Input.GetMouseButtonUp(0) && inventory.currentItem == 8)
         {
-            questAnimator.SetBool("look", false);
+            questAnimator2.SetBool("look", false);
         }
     }
 
@@ -196,8 +264,9 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Q) && canShoot)
+        if (Input.GetKeyDown(KeyCode.Q) && canShoot && gunCurrentAmmo > 0)
         {
+            gunCurrentAmmo--;
             canShoot = false;
             gunAnimator.SetBool("shoot", true);
             StartCoroutine(Shoot());
@@ -259,6 +328,10 @@ public class PlayerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);        
         gunAnimator.SetBool("shoot", false);
+        if(Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit hit, 100f, attackLayer))
+        {
+            hit.transform.gameObject.GetComponent<EnemyAI>().Damage(3);
+        }
     }
 
     IEnumerator Heal()
@@ -284,7 +357,47 @@ public class PlayerMovement : MonoBehaviour
 
         if(currentHealth <= 0)
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(1);
         }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.tag == "Quest2")
+        {
+            quest2Range = true;
+        }
+
+        if (other.tag == "Quest5")
+        {
+            quest5Range = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Quest5")
+        {
+            quest5Range = false;
+        }
+    }
+
+    IEnumerator questText()
+    {
+        questUpdateText.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        questUpdateText.SetActive(false);
+    }
+
+    public void Resume()
+    {
+        Time.timeScale = 1f;
+        PauseScreen.SetActive(false);
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    public void MainMenu()
+    {
+        SceneManager.LoadScene(0);
     }
 }

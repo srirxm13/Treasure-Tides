@@ -15,6 +15,8 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] Animator animator;
     [SerializeField] int health;
     private bool canAttack;
+
+    [SerializeField] bool questSkelly;
     // Start is called before the first frame update
     void Start()
     {
@@ -83,6 +85,10 @@ public class EnemyAI : MonoBehaviour
         health -= damage;
         if(health <= 0f)
         {
+            if (questSkelly)
+            {
+                playerTarget.GetComponent<PlayerMovement>().questSkelly++;
+            }
             Destroy(gameObject);
         }
     }
